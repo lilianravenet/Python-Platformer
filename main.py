@@ -5,7 +5,7 @@ pygame.init()
 
 pygame.display.set_caption("Platformer")
 
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1080, 720
 FPS = 30
 PLAYER_VEL = 8
 
@@ -81,7 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
-    def make_hit(self): # activate when touching fire
+    def make_hit(self):
         self.hit = True
 
     def move_left(self, vel):
