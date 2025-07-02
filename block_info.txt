@@ -1,0 +1,5 @@
+block = x, y
+
+normal_grass = 96, 0
+bricks = 272, 64
+rock = 0, 0
