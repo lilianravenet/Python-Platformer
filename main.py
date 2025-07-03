@@ -1,4 +1,5 @@
 import pygame
+from math import floor
 from os import listdir
 from os.path import isfile, join
 pygame.init()
@@ -50,7 +51,7 @@ def get_block(size):
     return pygame.transform.scale2x(surface)
 
 
-def get_letter(width=7.5, height=9.5, x=0, y=0): # x, y = location of letter from path
+def get_letter(x, y, width=7.5, height=9.5): # maybe just use load_sprite_sheets
     path = join("assets", "Menu", "TextWhite(8x10).png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((width, height), pygame.SRCALPHA, 32)
@@ -80,6 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.life = 200
         self.damage_intensity = 0.5
         self.damage_duration = 2
+        self.dead = False
 
     def jump(self):
         self.y_vel = -self.GRAVITY * 8
@@ -92,7 +94,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
-    def make_hit(self, intensity=0.5, duration=2):
+    def make_hit(self, intensity=1, duration=1):
         self.hit = True
         self.damage_intensity = intensity
         self.damage_duration = duration
@@ -120,6 +122,10 @@ class Player(pygame.sprite.Sprite):
             if self.hit_count > fps * self.damage_duration:
                 self.hit = False
                 self.hit_count = 0
+
+        if floor(self.life) <= 0:
+            self.death_animation()
+            death_screen()
 
         self.fall_count += 1
         self.update_sprite()
@@ -161,6 +167,11 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, win, offset_x):
         win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+
+    def death_animation(self):
+        self.dead = True
+        # add desappearing animation
+        self.kill()
 
 
 class Object(pygame.sprite.Sprite):
@@ -311,12 +322,18 @@ def handle_move(player, objects):
 
     for obj in to_check:
         if obj and obj.name == "fire":
-            player.make_hit() # make_hit is here
+            player.make_hit(intensity=0.5, duration=2)
+
+
+def death_screen():
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 1))  # 128 is the alpha value
+    window.blit(overlay, (0, 0))
 
 
 def main(window):
     clock = pygame.time.Clock()
-    background, bg_image = get_background("Gray.png")
+    background, bg_image = get_background("Purple.png")
 
     block_size = 96
 
