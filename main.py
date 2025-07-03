@@ -45,7 +45,16 @@ def get_block(size):
     path = join("assets", "Terrain", "Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
-    rect = pygame.Rect(96, 0, size, size) # location
+    rect = pygame.Rect(96, 0, size, size) # location of desired block from path
+    surface.blit(image, (0, 0), rect)
+    return pygame.transform.scale2x(surface)
+
+
+def get_letter(width=7.5, height=9.5, x=0, y=0): # x, y = location of letter from path
+    path = join("assets", "Menu", "TextWhite(8x10).png")
+    image = pygame.image.load(path).convert_alpha()
+    surface = pygame.Surface((width, height), pygame.SRCALPHA, 32)
+    rect = pygame.Rect(x, y, width, height)
     surface.blit(image, (0, 0), rect)
     return pygame.transform.scale2x(surface)
 
@@ -103,7 +112,7 @@ class Player(pygame.sprite.Sprite):
         if self.hit:
             self.hit_count += 1
             self.life -= 0.5
-        if self.hit_count > fps * 2: # change to die if self.hit_count >= life
+        if self.hit_count > fps * 2:
             self.hit = False
             self.hit_count = 0
 
@@ -282,9 +291,9 @@ def handle_move(player, objects):
     collide_left = collide(player, objects, -PLAYER_VEL * 2)
     collide_right = collide(player, objects, PLAYER_VEL * 2)
 
-    if keys[pygame.K_LEFT] and not collide_left:
+    if (keys[pygame.K_LEFT] or keys[pygame.K_q]) and not collide_left:
         player.move_left(PLAYER_VEL)
-    if keys[pygame.K_RIGHT] and not collide_right:
+    if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and not collide_right:
         player.move_right(PLAYER_VEL)
 
     vertical_collide = handle_vertical_collision(player, objects, player.y_vel)
@@ -322,7 +331,7 @@ def main(window):
                 break
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and player.jump_count < 2:
+                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP or event.key == pygame.K_z) and player.jump_count < 2:
                     player.jump()
 
         player.loop(FPS)
