@@ -78,6 +78,8 @@ class Player(pygame.sprite.Sprite):
         self.hit = False
         self.hit_count = 0
         self.life = 200
+        self.damage_intensity = 0.5
+        self.damage_duration = 2
 
     def jump(self):
         self.y_vel = -self.GRAVITY * 8
@@ -90,8 +92,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
-    def make_hit(self):
+    def make_hit(self, intensity=0.5, duration=2):
         self.hit = True
+        self.damage_intensity = intensity
+        self.damage_duration = duration
+        self.hit_count = 0
 
     def move_left(self, vel):
         self.x_vel = -vel
@@ -111,10 +116,10 @@ class Player(pygame.sprite.Sprite):
 
         if self.hit:
             self.hit_count += 1
-            self.life -= 0.5
-        if self.hit_count > fps * 2:
-            self.hit = False
-            self.hit_count = 0
+            self.life -= self.damage_intensity
+            if self.hit_count > fps * self.damage_duration:
+                self.hit = False
+                self.hit_count = 0
 
         self.fall_count += 1
         self.update_sprite()
@@ -237,9 +242,14 @@ def draw(window, background, bg_image, player, objects, offset_x):
     if life_percent > 0.5:
         red = int(510 * (1 - life_percent))
         green = 255
-    else:
+    elif life_percent <= 0.5 and life_percent > 0.2:
         red = 255
         green = int(510 * life_percent)
+    elif life_percent <= 0.2 and life_percent > 0:
+        red = 255
+        green = 0
+    else:
+        red = green = 0
 
     life_color = (red, green, 0)
 
@@ -301,7 +311,7 @@ def handle_move(player, objects):
 
     for obj in to_check:
         if obj and obj.name == "fire":
-            player.make_hit()
+            player.make_hit() # make_hit is here
 
 
 def main(window):
