@@ -79,8 +79,8 @@ class Player(pygame.sprite.Sprite):
         self.hit = False
         self.hit_count = 0
         self.life = 200
-        self.damage_intensity = 0.5
-        self.damage_duration = 2
+        self.damage_intensity = 1
+        self.damage_duration = 1 # in seconds
         self.dead = False
 
     def jump(self):
@@ -122,10 +122,6 @@ class Player(pygame.sprite.Sprite):
             if self.hit_count > fps * self.damage_duration:
                 self.hit = False
                 self.hit_count = 0
-
-        if floor(self.life) <= 0:
-            self.death_animation()
-            death_screen()
 
         self.fall_count += 1
         self.update_sprite()
@@ -205,12 +201,22 @@ class Fire(Object):
         self.mask = pygame.mask.from_surface(self.image)
         self.animation_count = 0
         self.animation_name = "off"
+        self.state = False
+        self.on_duration = 90
+        self.on_timer = 0
 
     def on(self):
         self.animation_name = "on"
+        self.state = True
+        self.on_timer = self.on_duration
 
     def off(self):
         self.animation_name = "off"
+        self.state = False
+
+    def activating(self):
+        self.animation_name = "hit"
+        self.state = False
 
     def loop(self):
         sprites = self.fire[self.animation_name]
@@ -223,7 +229,18 @@ class Fire(Object):
         self.mask = pygame.mask.from_surface(self.image)
 
         if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            if self.animation_name == "hit":
+                self.on()
             self.animation_count = 0
+
+        if self.state and self.on_timer > 0:
+            self.on_timer -= 1
+            if self.on_timer <= 0:
+                self.off()
+
+    @property
+    def is_on(self):
+        return self.state
 
 
 def get_background(name):
@@ -270,7 +287,8 @@ def draw(window, background, bg_image, player, objects, offset_x):
     try:
         life_bar = pygame.draw.rect(window, life_color, pygame.Rect((WIDTH / 2) - 75, (HEIGHT - 50), life_bar_width, 20), border_radius=9)
     except ValueError:
-        pass # death screen goes here
+        player.death_animation()
+        death_screen()
 
     pygame.display.update()
 
@@ -322,8 +340,10 @@ def handle_move(player, objects):
 
     for obj in to_check:
         if obj and obj.name == "fire":
-            player.make_hit(intensity=0.5, duration=2)
-
+            if obj.is_on:
+                player.make_hit(intensity=0.5, duration=2)
+            else:
+                obj.activating()
 
 def death_screen():
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -339,7 +359,7 @@ def main(window):
 
     player = Player(100, 100, 50, 50)
     fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
-    fire.on()
+    fire.off()
     floor = [Block(i * block_size, HEIGHT - block_size, block_size)
              for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
     objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
