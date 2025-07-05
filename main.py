@@ -51,8 +51,8 @@ def get_block(size):
     return pygame.transform.scale2x(surface)
 
 
-def get_letter(x, y, width=7.5, height=9.5): # maybe just use load_sprite_sheets
-    path = join("assets", "Menu", "TextWhite(8x10).png")
+def get_letter(x, y, width=7.5, height=9.5, color="White"): # color with uppercase: either "Black" or "White"
+    path = join("assets", "Menu", f"Text{color}(8x10).png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((width, height), pygame.SRCALPHA, 32)
     rect = pygame.Rect(x, y, width, height)
@@ -167,7 +167,23 @@ class Player(pygame.sprite.Sprite):
     def death_animation(self):
         self.dead = True
         # add desappearing animation
+        self.jump()
+        if self.jump_count == 1:
+            animation = load_sprite_sheets("MainCharacters", None, 32, 32) # what the fuck
+            sprite_sheet_name = animation + "_" + self.direction #type: ignore
+            sprites = self.SPRITES[sprite_sheet_name]
+            sprite_index = (self.animation_count //
+                            self.ANIMATION_DELAY) % len(sprites)
+            self.sprite = sprites[sprite_index]
+            self.animation_count += 1
+            self.update()
+
         self.kill()
+
+    def death_screen(self):
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 1))  # 128 is the alpha value
+        window.blit(overlay, (0, 0))
 
 
 class Object(pygame.sprite.Sprite):
@@ -288,7 +304,7 @@ def draw(window, background, bg_image, player, objects, offset_x):
         life_bar = pygame.draw.rect(window, life_color, pygame.Rect((WIDTH / 2) - 75, (HEIGHT - 50), life_bar_width, 20), border_radius=9)
     except ValueError:
         player.death_animation()
-        death_screen()
+        player.death_screen()
 
     pygame.display.update()
 
@@ -345,11 +361,6 @@ def handle_move(player, objects):
             else:
                 obj.activating()
 
-def death_screen():
-    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 1))  # 128 is the alpha value
-    window.blit(overlay, (0, 0))
-
 
 def main(window):
     clock = pygame.time.Clock()
@@ -392,6 +403,8 @@ def main(window):
 
     pygame.quit()
     quit()
+
+    return 0
 
 
 if __name__ == "__main__":
