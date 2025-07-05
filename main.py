@@ -1,5 +1,4 @@
 import pygame
-from math import floor
 from os import listdir
 from os.path import isfile, join
 pygame.init()
@@ -58,6 +57,12 @@ def get_letter(x, y, width=7.5, height=9.5, color="White"): # color with upperca
     rect = pygame.Rect(x, y, width, height)
     surface.blit(image, (0, 0), rect)
     return pygame.transform.scale2x(surface)
+
+
+def get_sound(dir, name):
+    path = join("assets", "SoundEffects", dir, name)
+    sound = pygame.mixer.Sound(path)
+    return sound
 
 
 class Player(pygame.sprite.Sprite):
